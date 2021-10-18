@@ -348,18 +348,6 @@ class PaymentNetwork extends PaymentModule {
                     'options'  => array(
                         'query' =>  array(
                             array(
-                                'value' => 'hosted',
-                                'label' => $this->l('Hosted'),
-                            ),
-                            array(
-                                'value' => 'modal',
-                                'label' => $this->l('Hosted (Modal)'),
-                            ),
-                            array(
-                                'value' => 'iframe',
-                                'label' => $this->l('Hosted (Embedded)'),
-                            ),
-                            array(
                                 'value' => 'direct',
                                 'label' => $this->l('Direct 3D-Secure'),
                             ),
@@ -580,15 +568,15 @@ SCRIPT;
 
         $billingAddress = trim($invoiceAddress->address1);
         if (!empty($invoiceAddress->address2)) {
-            $billingAddress.= "\n" . trim($invoiceAddress->address2);
+            $billingAddress.= " " . trim($invoiceAddress->address2);
         }
 
         if (!empty($invoiceAddress->city)) {
-            $billingAddress.= "\n" . trim($invoiceAddress->city);
+            $billingAddress.= " " . trim($invoiceAddress->city);
         }
 
         if (!empty($invoiceAddress->country)) {
-            $billingAddress.= "\n" . trim($invoiceAddress->country);
+            $billingAddress.= " " . trim($invoiceAddress->country);
         }
 
         // Only make into an order when a successful order was created!
@@ -609,20 +597,20 @@ SCRIPT;
         $parameters = array(
             'merchantID'        => $merchantId,
             'currencyCode'      => $currency->iso_code,
-            'countryCode'       => $country->iso_code,
             'action'            => "SALE",
             'type'              => 1,
-            'transactionUnique' => (int)($this->context->cart->id) . '_' . date('YmdHis') . '_' . $order->cart->secure_key,
+            'transactionUnique' => uniqid($order->cart->secure_key . '-'),
             'orderRef'          => $order_id,
             'amount'            => \P3\SDK\AmountHelper::calculateAmountByCurrency(
                 $order->cart->getOrderTotal(),
                 $currency->iso_code
             ),
-            'customerName'      => $invoiceAddress->firstname . ' ' . $invoiceAddress->lastname,
-            'customerAddress'   => $billingAddress,
-            'customerPostcode'  => $invoiceAddress->postcode,
-            'customerEmail'     => $email,
-            'merchantData'      => sprintf(
+            'customerName'          => $invoiceAddress->firstname . ' ' . $invoiceAddress->lastname,
+            'customerCountryCode'   => $country->iso_code,
+            'customerAddress'       => $billingAddress,
+            'customerPostcode'      => $invoiceAddress->postcode,
+            'customerEmail'         => $email,
+            'merchantData'          => sprintf(
                 'PrestaShop %s module v%s (%s integration)',
                 $this->name,
                 $this->version,

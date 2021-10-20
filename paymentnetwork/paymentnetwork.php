@@ -607,6 +607,7 @@ SCRIPT;
             ),
             'customerName'          => $invoiceAddress->firstname . ' ' . $invoiceAddress->lastname,
             'customerCountryCode'   => $country->iso_code,
+            'customerTown'          => $invoiceAddress->city,
             'customerAddress'       => $billingAddress,
             'customerPostcode'      => $invoiceAddress->postcode,
             'customerEmail'         => $email,
@@ -621,6 +622,9 @@ SCRIPT;
 
         if (filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
             $parameters['remoteAddress'] = $_SERVER['REMOTE_ADDR'];
+        } else {
+            // TODO Remove after test
+            $parameters['remoteAddress'] = '52.137.38.250';
         }
 
         /**
@@ -696,6 +700,7 @@ SCRIPT;
                 $req = array(
                     'action' => 'SALE',
                     'merchantID' => Configuration::get('PAYMENT_NETWORK_MERCHANT_ID'),
+                    'acs' => 1,
                     'xref' => $_COOKIE['xref'],
                     'threeDSMD' => $_REQUEST['MD'],
                     'threeDSPaRes' => $_REQUEST['PaRes'],
@@ -710,6 +715,7 @@ SCRIPT;
                 $req = array(
                     'merchantID' => Configuration::get('PAYMENT_NETWORK_MERCHANT_ID'),
                     'action' => 'SALE',
+                    'acs' => 1,
                     // The following field must be passed to continue the 3DS request
                     'threeDSRef' => $_COOKIE['threeDSRef'],
                     'threeDSResponse' => $_POST,

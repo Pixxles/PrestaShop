@@ -2,7 +2,7 @@
   <div class="form-group row">
     <label class='col-md-3 form-control-label required'>{l s='Card number'}</label>
     <div class="col-md-6">
-      <input id="field-cardNumber" class='form-control' type="text" size="20" maxlength=20 autocomplete="off" name="cardNumber" required>
+      <input id="field-cardNumber" class='form-control' type="text" maxlength=23 autocomplete="off" name="cardNumber" required>
     </div>
   </div>
 

@@ -29,7 +29,7 @@ class PaymentNetwork extends PaymentModule {
      */
     public function __construct() {
 
-        $this->version     = '2.0.2';
+        $this->version     = '1.0.0';
         $this->ps_versions_compliancy = ['min' => '1.7', 'max' => _PS_VERSION_];
         $this->name        = 'paymentnetwork';
         $this->brand_config = include(_PS_MODULE_DIR_ . $this->name . '/config.php');
@@ -622,9 +622,6 @@ SCRIPT;
 
         if (filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
             $parameters['remoteAddress'] = $_SERVER['REMOTE_ADDR'];
-        } else {
-            // TODO Remove after test
-            $parameters['remoteAddress'] = '52.137.38.250';
         }
 
         /**

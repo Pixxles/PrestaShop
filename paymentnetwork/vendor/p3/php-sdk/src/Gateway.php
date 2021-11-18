@@ -69,7 +69,7 @@ class Gateway
         $this->merchantSecret = $merchantSecret;
 
         // Prevent insecure requests
-        //$gatewayURL = str_ireplace('http://', 'https://', $gatewayURL);
+        $gatewayURL = str_ireplace('http://', 'https://', $gatewayURL);
 
         // Always append end slash
         if (preg_match('/(\.php|\/)$/', $gatewayURL) == false) {

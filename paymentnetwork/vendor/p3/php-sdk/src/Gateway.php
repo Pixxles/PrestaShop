@@ -25,19 +25,19 @@ class Gateway
     /**
      * @var string	Merchant Account Id or Alias
      */
-    protected $merchantID;
+    protected $merchantID = null;
 
     /**
      * @var string	Secret for above Merchant Account
      */
-    protected $merchantSecret;
+    protected $merchantSecret =  null;
 
     /**
      * Useful response codes
      */
     const RC_SUCCESS						= 0;
 
-    const RC_3DS_AUTHENTICATION_REQUIRED	= 65802;
+    const RC_3DS_AUTHENTICATION_REQUIRED	= 0x1010A;
 
     /**
      * @var boolean	Enable debugging
@@ -84,7 +84,7 @@ class Gateway
         }
 
         $this->hostedModalUrl = $gatewayURL.'hosted/modal/';
-        $this->directUrl = $gatewayURL.'direct';
+        $this->directUrl = $gatewayURL.'direct/';
 
         if (array_key_exists('client', $options)) {
             $this->client = $options['client'];

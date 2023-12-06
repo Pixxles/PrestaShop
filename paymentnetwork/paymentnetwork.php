@@ -29,7 +29,7 @@ class PaymentNetwork extends PaymentModule {
      */
     public function __construct() {
 
-        $this->version     = '1.0.0';
+        $this->version     = '2.0.2';
         $this->ps_versions_compliancy = ['min' => '1.7', 'max' => _PS_VERSION_];
         $this->name        = 'paymentnetwork';
         $this->brand_config = include(_PS_MODULE_DIR_ . $this->name . '/config.php');
@@ -348,6 +348,10 @@ class PaymentNetwork extends PaymentModule {
                     'options'  => array(
                         'query' =>  array(
                             array(
+                                'value' => 'hosted',
+                                'label' => $this->l('Hosted'),
+                            ),
+                            array(
                                 'value' => 'direct',
                                 'label' => $this->l('Direct 3D-Secure'),
                             ),
@@ -605,7 +609,7 @@ SCRIPT;
                 $order->cart->getOrderTotal(),
                 $currency->iso_code
             ),
-            'customerName'          => $invoiceAddress->firstname . ' ' . $invoiceAddress->lastname,
+            'customerName'      => $invoiceAddress->firstname . ' ' . $invoiceAddress->lastname,
             'customerCountryCode'   => $country->iso_code,
             'customerTown'          => $invoiceAddress->city,
             'customerAddress'       => $billingAddress,
@@ -697,7 +701,6 @@ SCRIPT;
                 $req = array(
                     'action' => 'SALE',
                     'merchantID' => Configuration::get('PAYMENT_NETWORK_MERCHANT_ID'),
-                    'acs' => 1,
                     'xref' => $_COOKIE['xref'],
                     'threeDSMD' => $_REQUEST['MD'],
                     'threeDSPaRes' => $_REQUEST['PaRes'],
@@ -712,7 +715,6 @@ SCRIPT;
                 $req = array(
                     'merchantID' => Configuration::get('PAYMENT_NETWORK_MERCHANT_ID'),
                     'action' => 'SALE',
-                    'acs' => 1,
                     // The following field must be passed to continue the 3DS request
                     'threeDSRef' => $_COOKIE['threeDSRef'],
                     'threeDSResponse' => $_POST,

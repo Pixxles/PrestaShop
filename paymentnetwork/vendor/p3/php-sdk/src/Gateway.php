@@ -25,12 +25,12 @@ class Gateway
     /**
      * @var string	Merchant Account Id or Alias
      */
-    protected $merchantID = '100856';
+    protected $merchantID = null;
 
     /**
      * @var string	Secret for above Merchant Account
      */
-    protected $merchantSecret = 'Circle4Take40Idea';
+    protected $merchantSecret =  null;
 
     /**
      * Useful response codes
@@ -264,7 +264,7 @@ HTML;
      * @param callable $onSuccess
      * @return mixed
      */
-    public function verifyResponse(array &$response, callable $onThreeDSRequired, callable $onSuccess)
+    public function verifyResponse(array &$response, callable $onThreeDSRequired, callable $onSuccess, callable $onFailed)
     {
         if (!$response || !isset($response['responseCode'])) {
             throw new \RuntimeException('Invalid response from Payment Gateway');
@@ -303,8 +303,8 @@ HTML;
         } else if ($response['responseCode'] === Gateway::RC_SUCCESS) {
             return $onSuccess($response);
         } else {
-            // Signature mismatch
-            throw new \RuntimeException("Failed to take payment: " . htmlentities($response['responseMessage']));
+            // If not accepted or 3DS required call onFailed with response.
+            return $onFailed($response);
         }
     }
 

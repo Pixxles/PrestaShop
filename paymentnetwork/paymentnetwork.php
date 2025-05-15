@@ -839,6 +839,11 @@ SCRIPT;
      * @return void
      */
     public function onFailed($response) {
+        if (!empty($response['orderRef'])) {
+            $order = new Order($response['orderRef']);
+            $order->setCurrentState(Configuration::get('PS_OS_ERROR'));
+        }
+
         $link = $this->context->link->getModuleLink($this->name, 'paymentfailed', array('transaction_id' => $response['xref'], 'response_message' => $response['responseMessage']), true);
         $this->redirect($link);
     }

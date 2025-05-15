@@ -3,9 +3,11 @@
 /**
  * @since 1.5.0
  */
-class PaymentNetworkValidationModuleFrontController extends ModuleFrontController {
+class PaymentNetworkValidationModuleFrontController extends ModuleFrontController
+{
 
-    public function postProcess() {
+	public function postProcess()
+	{
         parent::init();
 
         parent::initContent();

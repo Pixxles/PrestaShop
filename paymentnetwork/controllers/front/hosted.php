@@ -4,11 +4,13 @@
  * @since 1.5.0
  * @uses  ModuleFrontControllerCore
  */
-class PaymentNetworkHostedModuleFrontController extends ModuleFrontController {
+class PaymentNetworkHostedModuleFrontController extends ModuleFrontController
+{
 	/**
 	 * @see FrontController::initContent()
 	 */
-	public function initContent() {
+	public function initContent()
+	{
 		parent::initContent();
 
         $redirectUrl = $this->context->link->getModuleLink($this->module->name, 'validation', array(), true);
@@ -16,11 +18,15 @@ class PaymentNetworkHostedModuleFrontController extends ModuleFrontController {
             $redirectUrl .= '&XDEBUG_SESSION_START=paymentmodule';
         }
 
+        $sessionIdDdc = $this->context->cookie->__get('ddc_session_id');
+        $sessionIdDdc = htmlspecialchars($sessionIdDdc, ENT_QUOTES, 'UTF-8');
+
         $parameters = array_merge(
             $this->module->captureOrder($this->context),
             [
-                'redirectURL' => $redirectUrl
-            ]
+                'redirectURL' => $redirectUrl,
+                'sessionId' => $sessionIdDdc,
+                ]
         );
 
         $type = Configuration::get('PAYMENT_NETWORK_INTEGRATION_TYPE');

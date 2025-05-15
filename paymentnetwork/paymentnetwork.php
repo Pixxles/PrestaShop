@@ -9,7 +9,7 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
-require_once __DIR__.'/vendor/autoload.php';
+require_once __DIR__ . '/vendor/autoload.php';
 
 class PaymentNetwork extends PaymentModule {
 
@@ -27,7 +27,8 @@ class PaymentNetwork extends PaymentModule {
      * constructor and extracted by Prestashop automatically in
      * the modules admin area
      */
-    public function __construct() {
+    public function __construct()
+    {
 
         $this->version     = (file_exists(dirname(__FILE__) . '/VERSION') ? file_get_contents(dirname(__FILE__) . '/VERSION') : "UV");
         $this->ps_versions_compliancy = ['min' => '1.7', 'max' => _PS_VERSION_];
@@ -65,7 +66,8 @@ class PaymentNetwork extends PaymentModule {
      * @return boolean Whether the install was successful
      * @throws PrestaShopException
      */
-    public function install() {
+    public function install()
+    {
         // Log will likely never occur due to missing settings.
         $this->log('Running install hook.');
         // If prestashop multi store is active, change context to global
@@ -110,7 +112,8 @@ class PaymentNetwork extends PaymentModule {
      *
      * @return		boolean		Whether the uninstall was successful
      */
-    public function uninstall() {
+    public function uninstall()
+    {
         $this->log('Running uninstall hook.');
 
         return (
@@ -149,7 +152,8 @@ class PaymentNetwork extends PaymentModule {
      *
      * @return PaymentOption[]	A list of payment options
      */
-    public function hookPaymentOptions($params) {
+    public function hookPaymentOptions($params)
+    {
         $type = Configuration::get('PAYMENT_NETWORK_INTEGRATION_TYPE');
         $this->log('Running payment options hook');
         if (!$this->active) {
@@ -233,7 +237,8 @@ class PaymentNetwork extends PaymentModule {
     /**
      * Hook from Prestashop to show the confirmed order after validation
      */
-    public function hookPaymentReturn($params) {
+    public function hookPaymentReturn($params)
+    {
         $this->log('Running payment return hook');
         if (!$this->active) {
             return;
@@ -274,7 +279,8 @@ class PaymentNetwork extends PaymentModule {
      * Duplicate fallback hook from Prestashop to show the confirmed order
      * after validation
      */
-    public function hookOrderConfirmation($params) {
+    public function hookOrderConfirmation($params)
+    {
         $this->log('Running order confirmation hook');
         if ($params['order']->module != $this->name) {
             return "";
@@ -318,6 +324,7 @@ class PaymentNetwork extends PaymentModule {
                     'attribute' => 'async',
                 ]
             );
+
             $this->context->controller->registerJavascript(
                 'module-' . $this->name . '-direct-integration-validations',
                 'modules/' . $this->name . '/views/js/direct-integration.js',
@@ -326,13 +333,50 @@ class PaymentNetwork extends PaymentModule {
                     'attribute' => 'async',
                 ]
             );
+
+            if (!isset($this->context->cookie->ddc_session_id)) {
+                $this->context->cookie->__set('ddc_session_id', substr(uniqid() . uniqid() . uniqid(), 0, 32));
+            }
+
+            $sessionIdDdc = $this->context->cookie->__get('ddc_session_id');
+
+            $this->context->smarty->assign([
+                'pn_session_id' => $sessionIdDdc,
+            ]);
+
+            \Media::addJsDef([
+                'pnVars' => [
+                    'kount_merchant_id' => $this->brand_config['merchant_id_ddc'],
+                    'session_id' => $sessionIdDdc,
+                    'environment' => $this->brand_config['environment_ddc'],
+                ]
+            ]);
+
+            $this->context->controller->registerJavascript(
+                'module-'.$this->name.'-ddc-sdk',
+                'modules/'.$this->name.'/views/js/ddc-sdk.js',
+                [
+                    'priority' => 200,
+                    'attribute' => 'defer',
+                ]
+            );
+
+            $this->context->controller->registerJavascript(
+                'module-'.$this->name.'-ddc-init',
+                'modules/'.$this->name.'/views/js/ddc-init.js',
+                [
+                    'priority' => 201,
+                    'attribute' => 'defer',
+                ]
+            );
         }
     }
 
     /**
      * Update configuration for any changes made in the module admin section
      */
-    public function getContent() {
+    public function getContent()
+    {
         $this->log('Updating module configuration');
         $output = null;
 
@@ -346,7 +390,6 @@ class PaymentNetwork extends PaymentModule {
             Configuration::updateValue('PAYMENT_NETWORK_GATEWAY_URL', Tools::getvalue('payment_network_gateway_url'));
             Configuration::updateValue('PAYMENT_NETWORK_CUSTOMER_WALLETS', Tools::getvalue('payment_network_customer_wallets'));
             $output .= $this->displayConfirmation($this->l('Settings updated'));
-
         }
 
         return $output . $this->displayForm();
@@ -355,7 +398,8 @@ class PaymentNetwork extends PaymentModule {
     /**
      * Display the modules configuration settings using a HelperForm
      */
-    public function displayForm() {
+    public function displayForm()
+    {
         $this->log('Displaying module settings');
         // Get default language
         $default_lang = (int)Configuration::get('PS_LANG_DEFAULT');
@@ -404,7 +448,7 @@ class PaymentNetwork extends PaymentModule {
                 ),
                 array(
                     'type'     => 'text',
-                    'label'    => $this->l('Frontend'),
+                    'label'    => $this->l('Payment Method Name for Frontend'),
                     'name'     => 'payment_network_frontend',
                     'class'    => 'fixed-width-xl',
                     'required' => true,
@@ -521,7 +565,7 @@ class PaymentNetwork extends PaymentModule {
         $helper->fields_value['payment_network_merchant_id']      = Configuration::get('PAYMENT_NETWORK_MERCHANT_ID');
         $helper->fields_value['payment_network_integration_type'] = Configuration::get('PAYMENT_NETWORK_INTEGRATION_TYPE');
         $helper->fields_value['payment_network_passphrase']       = Configuration::get('PAYMENT_NETWORK_MERCHANT_PASSPHRASE');
-        $helper->fields_value['payment_network_frontend']         = Configuration::get('PAYMENT_NETWORK_FRONTEND');
+        $helper->fields_value['payment_network_frontend']         = Configuration::get('PAYMENT_NETWORK_FRONTEND') ?: 'Credit or Debit Card';
         $helper->fields_value['payment_network_debug']            = Configuration::get('PAYMENT_NETWORK_DEBUG');
         $helper->fields_value['payment_network_form_responsive']  = Configuration::get('PAYMENT_NETWORK_FORM_RESPONSIVE');
         $helper->fields_value['payment_network_gateway_url']      = Configuration::get('PAYMENT_NETWORK_GATEWAY_URL');
@@ -532,21 +576,22 @@ class PaymentNetwork extends PaymentModule {
     /**
      * Generate the direct form with card fields
      */
-    private function generateDirectForm() {
+    private function generateDirectForm()
+    {
         $this->log('Generating the direct form');
         $this->context->smarty->assign(
             array(
                 'url' => $this->context->link->getModuleLink($this->name, 'direct', array(), true),
                 'device_data'  => [
-                    'browserInfo[deviceChannel]'            => 'browser',
-                    'browserInfo[deviceIdentity]'           => (isset($_SERVER['HTTP_USER_AGENT']) ? htmlentities($_SERVER['HTTP_USER_AGENT']) : null),
-                    'browserInfo[deviceTimeZone]'           => '0',
-                    'browserInfo[deviceCapabilities]'       => '',
-                    'browserInfo[deviceScreenResolution]'   => '1x1x1',
-                    'browserInfo[deviceAcceptContent]'      => (isset($_SERVER['HTTP_ACCEPT']) ? htmlentities($_SERVER['HTTP_ACCEPT']) : '*/*'),
-                    'browserInfo[deviceAcceptEncoding]'     => (isset($_SERVER['HTTP_ACCEPT_ENCODING']) ? htmlentities($_SERVER['HTTP_ACCEPT_ENCODING']) : '*'),
-                    'browserInfo[deviceAcceptLanguage]'     => (isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) ? htmlentities($_SERVER['HTTP_ACCEPT_LANGUAGE']) : 'en-gb;q=0.001'),
-                    'browserInfo[deviceAcceptCharset]'      => (isset($_SERVER['HTTP_ACCEPT_CHARSET']) ? htmlentities($_SERVER['HTTP_ACCEPT_CHARSET']) : null),
+                    'browserInfo[deviceChannel]'				=> 'browser',
+                    'browserInfo[deviceIdentity]'			=> (isset($_SERVER['HTTP_USER_AGENT']) ? htmlentities($_SERVER['HTTP_USER_AGENT']) : null),
+                    'browserInfo[deviceTimeZone]'			=> '0',
+                    'browserInfo[deviceCapabilities]'		=> '',
+                    'browserInfo[deviceScreenResolution]'	=> '1x1x1',
+                    'browserInfo[deviceAcceptContent]'		=> (isset($_SERVER['HTTP_ACCEPT']) ? htmlentities($_SERVER['HTTP_ACCEPT']) : null),
+                    'browserInfo[deviceAcceptEncoding]'		=> (isset($_SERVER['HTTP_ACCEPT_ENCODING']) ? htmlentities($_SERVER['HTTP_ACCEPT_ENCODING']) : null),
+                    'browserInfo[deviceAcceptLanguage]'		=> (isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) ? htmlentities($_SERVER['HTTP_ACCEPT_LANGUAGE']) : null),
+                    'browserInfo[deviceAcceptCharset]'		=> (isset($_SERVER['HTTP_ACCEPT_CHARSET']) ? htmlentities($_SERVER['HTTP_ACCEPT_CHARSET']) : null),
                 ],
             )
         );
@@ -558,7 +603,8 @@ class PaymentNetwork extends PaymentModule {
      * Log out a message to the logger and error log
      * for debugging and error purposes
      */
-    public function log($msg) {
+    public function log($msg)
+    {
         static $canLog;
         if (is_null($canLog)) {
             $canLog = Configuration::get('PAYMENT_NETWORK_DEBUG') == 'Y';
@@ -576,8 +622,9 @@ class PaymentNetwork extends PaymentModule {
      * This allows us to redirect the user out of the iframe back into
      * the browser again.
      */
-    protected function redirect($url) {
-        $iframe = (Configuration::get('PAYMENT_NETWORK_INTEGRATION_TYPE') === 'iframe');
+    protected function redirect($url)
+    {
+        $iframe = Configuration::get('PAYMENT_NETWORK_INTEGRATION_TYPE') === 'iframe';
         $this->log(sprintf('Redirecting user to URL %s %s iframe', $url, ($iframe ? 'w/' : 'w/o')));
         if ($iframe) {
             echo <<<SCRIPT
@@ -595,7 +642,8 @@ SCRIPT;
      * @param $order
      * @return array
      */
-    public function captureOrder($order) {
+    public function captureOrder($order)
+    {
         $this->log('Generating generic payment fields');
         $invoiceAddress = new Address((int)$order->cart->id_address_invoice);
 
@@ -675,8 +723,7 @@ SCRIPT;
             $wallets = DB::getInstance()->executeS("SELECT wallet_id FROM $wallet_table_name WHERE merchant_id = '$merchantId' AND customer_email = '$email' LIMIT 1");
 
             //If the customer wallet record exists.
-            if (count($wallets) > 0)
-            {
+            if (count($wallets) > 0) {
                 //Add walletID to request.
                 $parameters['walletID'] = $wallets[0]['wallet_id'];
             } else {
@@ -695,7 +742,8 @@ SCRIPT;
      *
      * A wallet will always be created if a walletID is returned. Even if payment fails.
      */
-    protected function createWallet($response) {
+    protected function createWallet($response)
+    {
         //when the wallets is enabled, the user is logged in and there is a wallet ID in the response.
 
         if (
@@ -714,7 +762,8 @@ SCRIPT;
             //If the customer wallet record does not exists.
             if (count($wallets) == 0) {
                 //Add walletID to request.
-                DB::getInstance()->insert('paymentnetwork_wallets',
+                DB::getInstance()->insert(
+                    'paymentnetwork_wallets',
                     [
                         'merchant_id' => $merchantId,
                         'customer_email' => $response['customerEmail'],
@@ -729,7 +778,8 @@ SCRIPT;
      * @param null $response
      * @return string
      */
-    public function processResponse($response = null) {
+    public function processResponse($response = null)
+    {
         try {
             // ThreeDSVersion 1
             if (isset($_REQUEST['MD'], $_REQUEST['PaRes'])) {
@@ -761,6 +811,8 @@ SCRIPT;
             if (!isset($response)) {
                 $response = $_POST;
             }
+
+            $this->createWallet($response);
 
             $this->gateway->verifyResponse(
                 $response,
@@ -799,7 +851,8 @@ SCRIPT;
      * @return void
      * @throws Exception
      */
-    public function onSuccess($response) {
+    public function onSuccess($response)
+    {
         $this->context->customer = new Customer($this->context->cart->id_customer);
 
         // Only make into an order when a successful order was created!
@@ -825,7 +878,8 @@ SCRIPT;
 
     }
 
-    public function onThreeDSRequired($threeDSVersion, $response) {
+    public function onThreeDSRequired($threeDSVersion, $response)
+    {
         // check for version
         if ($threeDSVersion >= 200) {
             // Silently POST the 3DS request to the ACS in the IFRAME

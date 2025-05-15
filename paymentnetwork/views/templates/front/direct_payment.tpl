@@ -26,6 +26,9 @@
   {foreach $device_data as $k=>$v}
     <input type="hidden" name="{$k|escape:'html':'UTF-8'}" id="{$k|escape:'html':'UTF-8'}" value="{$v|escape:'html':'UTF-8'}"/>
   {/foreach}
+  {if isset($pn_session_id)}
+    <input type="hidden" name="pn_session_id" value="{$pn_session_id|escape:'html':'UTF-8'}">
+  {/if}
 </form>
 <script>
   var screen_width = (window && window.screen ? window.screen.width : '0');

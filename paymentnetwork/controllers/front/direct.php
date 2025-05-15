@@ -4,12 +4,14 @@
  * @since 1.5.0
  * @uses  ModuleFrontControllerCore
  */
-class PaymentNetworkDirectModuleFrontController extends ModuleFrontController {
+class PaymentNetworkDirectModuleFrontController extends ModuleFrontController
+{
 
     /**
      * @see FrontController::initContent()
      */
-    public function initContent() {
+    public function initContent()
+    {
         session_start();
 
         parent::initContent();
@@ -19,6 +21,9 @@ class PaymentNetworkDirectModuleFrontController extends ModuleFrontController {
             $redirectUrl .= '&XDEBUG_SESSION_START=paymentmodule';
         }
 
+        $sessionId = Tools::getValue('pn_session_id');
+        $sessionId = htmlspecialchars($sessionId, ENT_QUOTES, 'UTF-8');
+
         $data = array_merge(
             $this->module->captureOrder($this->context),
             [
@@ -27,6 +32,7 @@ class PaymentNetworkDirectModuleFrontController extends ModuleFrontController {
                 'cardExpiryMonth' => $_POST['cardExpiryMonth'],
                 'cardExpiryYear' => $_POST['cardExpiryYear'],
                 'threeDSRedirectURL' => $redirectUrl,
+                'sessionId' => $sessionId,
             ],
             $_POST['browserInfo']
         );

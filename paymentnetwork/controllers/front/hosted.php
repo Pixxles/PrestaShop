@@ -4,23 +4,29 @@
  * @since 1.5.0
  * @uses  ModuleFrontControllerCore
  */
-class PaymentNetworkHostedModuleFrontController extends ModuleFrontController {
+class PaymentNetworkHostedModuleFrontController extends ModuleFrontController
+{
 	/**
 	 * @see FrontController::initContent()
 	 */
-	public function initContent() {
+	public function initContent()
+	{
 		parent::initContent();
 
         $redirectUrl = $this->context->link->getModuleLink($this->module->name, 'validation', array(), true);
-        if ('Y' === Configuration::get('PAYMENT_NETWORK_DEBUG')) {
-            $redirectUrl.= '?XDEBUG_SESSION_START=asdf';
+        if (Configuration::get('PAYMENT_NETWORK_DEBUG') === 'Y') {
+            $redirectUrl .= '&XDEBUG_SESSION_START=paymentmodule';
         }
 
-		$parameters = array_merge(
-		    $this->module->captureOrder($this->context),
+        $sessionIdDdc = $this->context->cookie->__get('ddc_session_id');
+        $sessionIdDdc = htmlspecialchars($sessionIdDdc, ENT_QUOTES, 'UTF-8');
+
+        $parameters = array_merge(
+            $this->module->captureOrder($this->context),
             [
-                'redirectURL' => $redirectUrl
-            ]
+                'redirectURL' => $redirectUrl,
+                'sessionId' => $sessionIdDdc,
+                ]
         );
 
         $type = Configuration::get('PAYMENT_NETWORK_INTEGRATION_TYPE');
@@ -30,12 +36,17 @@ class PaymentNetworkHostedModuleFrontController extends ModuleFrontController {
                 Configuration::get('PAYMENT_NETWORK_MERCHANT_PASSPHRASE')
             );
 
-            // Prevent insecure requests
+            // Replace http with https in Gateway URL
             $gatewayURL = str_ireplace('http://', 'https://', Configuration::get('PAYMENT_NETWORK_GATEWAY_URL'));
 
             // Always append end slash
             if (preg_match('/(\.php|\/)$/', $gatewayURL) == false) {
-                $gatewayURL .= '/hosted/';
+                $gatewayURL .= '/';
+            }
+
+            // If URL is missing /hosted add it. Otherwise assume this is a CHF URL.
+            if (preg_match('/hosted(\/.*)?/', $gatewayURL) == false) {
+                $gatewayURL .= 'hosted/';
             }
 
             $this->context->smarty->assign(array(
@@ -55,5 +66,5 @@ class PaymentNetworkHostedModuleFrontController extends ModuleFrontController {
             echo $hostedRequest;
             die();
         }
-	}
+    }
 }

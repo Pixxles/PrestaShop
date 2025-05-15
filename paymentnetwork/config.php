@@ -10,4 +10,6 @@ return [
 	'redirect_notice' => 'You will be redirected to the Payment Gateway for payment',
 	'formfill_notice' => 'Please fill in your payment details',
 	'logo' => '/logo.png',
+    'merchant_id_ddc' => 102444,
+    'environment_ddc' => 'PROD',
 ];

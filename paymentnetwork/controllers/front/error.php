@@ -4,12 +4,14 @@
  * @since 1.5.0
  * @uses  ModuleFrontControllerCore
  */
-class PaymentNetworkErrorModuleFrontController extends ModuleFrontController {
+class PaymentNetworkErrorModuleFrontController extends ModuleFrontController
+{
 
 	/**
 	 * @see FrontController::initContent()
 	 */
-	public function initContent() {
+	public function initContent()
+	{
         session_start();
 
         parent::initContent();
